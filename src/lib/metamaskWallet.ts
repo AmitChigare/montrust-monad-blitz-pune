@@ -3,6 +3,7 @@
 import { createWalletClient, custom, type WalletClient } from "viem";
 import { erc7715ProviderActions } from "@metamask/smart-accounts-kit/actions";
 import { monadTestnet } from "@/lib/chain";
+import { MONAD_TESTNET } from "@/lib/constants";
 
 export type MetaMaskEthereum = {
   isMetaMask?: boolean;
@@ -68,4 +69,40 @@ export function createMetaMaskWalletClient(): WalletClient | null {
     chain: monadTestnet,
     transport: custom(provider as import("viem").EIP1193Provider),
   }).extend(erc7715ProviderActions());
+}
+
+/** Switch MetaMask to Monad Testnet (10143), adding the chain if needed. */
+export async function ensureMonadTestnetInMetaMask(): Promise<void> {
+  const provider = getMetaMaskProvider();
+  if (!provider?.request) {
+    throw new Error(
+      "MetaMask is required. Install MetaMask and connect on Monad Testnet (10143)."
+    );
+  }
+
+  const chainIdHex = await provider.request({ method: "eth_chainId" });
+  const current = parseInt(String(chainIdHex), 16);
+  if (current === MONAD_TESTNET.chainId) return;
+
+  const targetHex = `0x${MONAD_TESTNET.chainId.toString(16)}`;
+
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: targetHex }],
+    });
+  } catch {
+    await provider.request({
+      method: "wallet_addEthereumChain",
+      params: [
+        {
+          chainId: targetHex,
+          chainName: MONAD_TESTNET.name,
+          nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
+          rpcUrls: [MONAD_TESTNET.rpcUrl],
+          blockExplorerUrls: [MONAD_TESTNET.explorerUrl],
+        },
+      ],
+    });
+  }
 }

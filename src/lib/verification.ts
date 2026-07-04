@@ -2,7 +2,7 @@ import {
   recoverMessageAddress,
   type Hex,
 } from "viem";
-import { endpointsMatch } from "@/schemas/agentCard";
+import { matchRegisteredEndpoint } from "./endpointAliases";
 import { resolveAgentFromRegistry } from "./erc8004";
 
 export type VerificationStatus = "verified" | "failed" | "warning";
@@ -144,19 +144,25 @@ export async function verifyAgentEndpoint(
     id: "agent-card",
     label: "Agent Card Validation",
     passed: true,
-    detail: `Valid card: "${registry.agentCard.name}"`,
+    detail: registry.metadataFetchFailed
+      ? `On-chain identity found; metadata URI unavailable — using tokenURI fallback for "${registry.agentCard.name}"`
+      : `Valid card: "${registry.agentCard.name}"`,
   });
 
-  const endpointMatch = registry.registeredEndpoints.some((ep) =>
-    endpointsMatch(endpointUrl, ep)
+  const endpointMatchResult = matchRegisteredEndpoint(
+    endpointUrl,
+    registry.registeredEndpoints
   );
+  const endpointMatch = endpointMatchResult.matched;
 
   checks.push({
     id: "endpoint-match",
     label: "Endpoint Match",
     passed: endpointMatch,
     detail: endpointMatch
-      ? "Submitted endpoint matches a URL in the on-chain agent card"
+      ? endpointMatchResult.viaAlias
+        ? `Matches agent card via production alias (card lists localhost; same path on this deployment)`
+        : "Submitted endpoint matches a URL in the on-chain agent card"
       : `Not listed. Registered: ${registry.registeredEndpoints.join(", ") || "none"}`,
   });
 

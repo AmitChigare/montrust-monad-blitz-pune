@@ -7,10 +7,16 @@ const serviceSchema = z.object({
   capabilities: z.array(z.unknown()).optional(),
 });
 
-const legacyEndpointSchema = z.object({
-  type: z.string().optional(),
-  url: z.string().url(),
-});
+const legacyEndpointSchema = z
+  .object({
+    type: z.string().optional(),
+    url: z.string().optional(),
+    endpoint: z.string().optional(),
+    protocol: z.string().optional(),
+  })
+  .refine((e) => Boolean(e.url || e.endpoint), {
+    message: "legacy endpoint requires url or endpoint",
+  });
 
 export const agentCardSchema = z
   .object({
@@ -51,7 +57,8 @@ export function extractEndpoints(card: AgentCard): string[] {
 
   if (card.endpoints) {
     for (const e of card.endpoints) {
-      urls.push(normalizeUrl(e.url));
+      const url = "url" in e && e.url ? e.url : (e as { endpoint?: string }).endpoint;
+      if (url?.startsWith("http")) urls.push(normalizeUrl(url));
     }
   }
 

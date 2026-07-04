@@ -97,11 +97,21 @@ async function main() {
   };
   const uri = `data:application/json;base64,${Buffer.from(JSON.stringify(registration)).toString("base64")}`;
 
+  const gas = await publicClient.estimateContractGas({
+    address: ERC8004.identityRegistry,
+    abi: identityRegistryAbi,
+    functionName: "register",
+    args: [uri],
+    account: account.address,
+  });
+  const gasLimit = gas > 1_800_000n ? (gas * 125n) / 100n : 1_800_000n;
+
   const registerHash = await walletClient.writeContract({
     address: ERC8004.identityRegistry,
     abi: identityRegistryAbi,
     functionName: "register",
     args: [uri],
+    gas: gasLimit,
   });
   const registerReceipt = await publicClient.waitForTransactionReceipt({
     hash: registerHash,

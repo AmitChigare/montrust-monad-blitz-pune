@@ -10,8 +10,9 @@
   "agent": {
     "id": "1786",
     "name": "MonTrust Photo Proof Agent",
-    "challengeEndpoint": "http://localhost:3000/api/agent/challenge",
-    "tokenURI": "data:application/json;base64,eyJ0eXBlIjoiaHR0cHM6Ly9laXBzLmV0aGVyZXVtLm9yZy9FSVB..."
+    "challengeEndpoint": "https://montrust-monad-blitz-pune.vercel.app/api/agent/challenge",
+    "tokenURI": "data:application/json;base64,eyJ0eXBlIjoiaHR0cHM6Ly9laXBzLmV0aGVyZXVtLm9yZy9FSVB...",
+    "updatedAt": "2026-07-04T13:36:54.570Z"
   },
   "transactions": {
     "proofAnchorDeploy": "0xb3480af4f08942f245a615527c01722fa5319c4688cd141632f38632821326c9",
